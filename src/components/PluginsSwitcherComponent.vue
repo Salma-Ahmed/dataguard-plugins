@@ -1,12 +1,75 @@
-<script setup></script>
 <template>
   <div class="switcher d-flex justify-content-center">
     <div class="form-check form-switch d-flex justify-content-between align-items-center">
-      <label class="form-check-label" for="flexSwitchCheckDefault">All plugins enabled</label>
-      <input class="form-check-input ms-0" type="checkbox" id="flexSwitchCheckDefault" />
+      <label class="form-check-label" for="flexSwitchCheckDefault"
+        >All plugins {{ checked ? 'enabled' : 'disabled' }}</label
+      >
+      <input
+        class="form-check-input ms-0"
+        type="checkbox"
+        id="flexSwitchCheckDefault"
+        v-model="checked"
+      />
     </div>
   </div>
 </template>
+<script>
+import { mapActions, mapGetters } from 'vuex'
+export default {
+  data() {
+    return {
+      checked: false,
+      updatedTabData: {}
+    }
+  },
+  computed: {
+    ...mapGetters({ tabsData: 'getTabsData', activeTab: 'getActiveTab' }),
+    activeTabData() {
+      const data = this.tabsData.filter((tab) => tab.title === this.activeTab)
+      return data[0]
+    }
+  },
+  methods: {
+    ...mapActions({ togglePluginsState: 'togglePluginsState', getTabsData: 'getTabsData' }),
+    enablePlugins() {
+      const disabledPlugins = []
+      const payload = {
+        id: this.activeTabData.id,
+        disabled: disabledPlugins
+      }
+      this.togglePluginsState(payload).then(() => {
+        this.getTabsData()
+      })
+    },
+    disablePlugins() {
+      const disabledPlugins = [...this.activeTabData.active, ...this.activeTabData.inactive]
+      const payload = {
+        id: this.activeTabData.id,
+        disabled: disabledPlugins
+      }
+      this.togglePluginsState(payload).then(() => {
+        this.getTabsData()
+      })
+    }
+  },
+  watch: {
+    checked(val) {
+      if (val) {
+        this.enablePlugins()
+      } else {
+        this.disablePlugins()
+      }
+    },
+    activeTabData(val) {
+      if (val.disabled.length == 0) {
+        this.checked = true
+      } else {
+        this.checked = false
+      }
+    }
+  }
+}
+</script>
 <style scoped lang="scss">
 .switcher {
   position: absolute;

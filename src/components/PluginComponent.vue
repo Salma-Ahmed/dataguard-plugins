@@ -1,33 +1,37 @@
 <template>
   <div class="plugin mb-5" :class="!isPluginInTab ? 'd-none' : ''">
     <div class="d-flex justify-content-between">
-      <h5 :disabled="pluginInactive">{{ plugin.title }}</h5>
+      <h5 :disabled="pluginDisabled">{{ plugin.title }}</h5>
       <div
         class="form-check form-switch d-flex flex-column align-items-center active"
-        :class="pluginInactive ? `inactive ${pluginState}` : pluginState"
-        :disabled="pluginInactive"
+        :class="pluginDisabled ? `inactive ${pluginState}` : pluginState"
+        :disabled="pluginDisabled"
       >
         <input
           class="form-check-input ms-0"
           type="checkbox"
           :id="`flexSwitchCheckDefault${plugin.title}`"
           v-model="checked"
-          :disabled="pluginInactive"
+          :disabled="pluginDisabled"
+          @change="onChange"
         />
-        <label class="form-check-label" for="flexSwitchCheckDefault">{{ pluginState }}</label>
+        <label class="form-check-label text-capitalize" for="flexSwitchCheckDefault">{{
+          pluginState
+        }}</label>
       </div>
     </div>
-    <p class="w-75 mt-2" :disabled="pluginInactive">
+    <p class="w-75 mt-2" :disabled="pluginDisabled">
       {{ plugin.description }}
     </p>
   </div>
 </template>
 <script>
+import { mapActions } from 'vuex'
 export default {
   data() {
     return {
       pluginState: '',
-      pluginInactive: false,
+      pluginDisabled: false,
       checked: false,
       isPluginInTab: true
     }
@@ -43,33 +47,81 @@ export default {
     }
   },
   methods: {
-    pluginInTab() {
-      if (this.tab.active.includes(this.plugin.title.replace(/ /g, '').toLowerCase())) {
+    ...mapActions({ togglePluginState: 'togglePluginState', getTabsData: 'getTabsData' }),
+    enablePlugin() {
+      const pluginTitle = this.plugin.title.replace(/ /g, '').toLowerCase()
+      const tabData = { ...this.tab }
+      const activePlugins = [...this.tab.active, pluginTitle]
+      let index = tabData.inactive.indexOf(pluginTitle)
+      if (index !== -1) {
+        tabData.inactive.splice(index, 1)
+      }
+      const inactivePlugins = [...tabData.inactive]
+      const payload = {
+        id: this.tab.id,
+        active: activePlugins,
+        inactive: inactivePlugins
+      }
+      this.togglePluginState(payload).then(() => {
+        this.getTabsData()
+      })
+    },
+    disablePlugin() {
+      const pluginTitle = this.plugin.title.replace(/ /g, '').toLowerCase()
+      const tabData = { ...this.tab }
+      const inactivePlugins = [...this.tab.inactive, pluginTitle]
+      let index = tabData.active.indexOf(pluginTitle)
+      if (index !== -1) {
+        tabData.active.splice(index, 1)
+      }
+      const activePlugins = [...tabData.active]
+      const payload = {
+        id: this.tab.id,
+        inactive: inactivePlugins,
+        active: activePlugins
+      }
+      this.togglePluginState(payload).then(() => {
+        this.getTabsData()
+      })
+    },
+    onChange() {
+      if (this.checked) {
+        this.enablePlugin()
+      } else {
+        this.disablePlugin()
+      }
+    },
+    loadPlugins() {
+      if (
+        this.tab.active.length &&
+        this.tab.active.includes(this.plugin.title.replace(/ /g, '').toLowerCase())
+      ) {
         this.pluginState = 'allowed'
-        this.pluginInactive = false
         this.checked = true
         this.isPluginInTab = true
-        return true
-      } else if (this.tab.disabled.includes(this.plugin.title.replace(/ /g, '').toLowerCase())) {
+      } else if (
+        this.tab.inactive.length &&
+        this.tab.inactive.includes(this.plugin.title.replace(/ /g, '').toLowerCase())
+      ) {
         this.pluginState = 'blocked'
-        this.pluginInactive = false
         this.checked = false
         this.isPluginInTab = true
-        return true
-      } else if (this.tab.inactive.includes(this.plugin.title.replace(/ /g, '').toLowerCase())) {
-        this.pluginState = 'allowed'
-        this.pluginInactive = true
-        this.checked = true
-        this.isPluginInTab = true
-        return true
       } else {
         this.isPluginInTab = false
         return false
       }
+      if (
+        this.tab.disabled.length &&
+        this.tab.disabled.includes(this.plugin.title.replace(/ /g, '').toLowerCase())
+      ) {
+        this.pluginDisabled = true
+        this.isPluginInTab = true
+      }
     }
   },
+
   mounted() {
-    this.pluginInTab()
+    this.loadPlugins()
   },
   watch: {
     checked(val) {
@@ -89,6 +141,12 @@ export default {
   border-radius: 10px;
   padding: 15px;
   color: gray;
+  @media (max-width: 768px) {
+    flex: 0 0 100%;
+  }
+  @media (min-width: 769px) and (max-width: 1024px) {
+    flex: 0 0 48%;
+  }
   .form-check {
     &.allowed {
       color: green;

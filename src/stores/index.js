@@ -36,6 +36,24 @@ export default createStore({
       } catch (err) {
         console.log(err)
       }
+    },
+    async togglePluginState(state, payload) {
+      let response
+      try {
+        response = await axios.patch(`http://localhost:3000/tabData/${payload.id}`, payload)
+        console.log(response)
+      } catch (err) {
+        console.log(err)
+      }
+    },
+    async togglePluginsState(state, payload) {
+      let response
+      try {
+        response = await axios.patch(`http://localhost:3000/tabData/${payload.id}`, payload)
+        console.log(response)
+      } catch (err) {
+        console.log(err)
+      }
     }
   },
   getters: {

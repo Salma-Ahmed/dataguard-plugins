@@ -44,7 +44,8 @@ export default {
   watch: {
     activeTab: function () {
       this.tabs += 1
-    }
+    },
+    tabsData() {}
   }
 }
 </script>

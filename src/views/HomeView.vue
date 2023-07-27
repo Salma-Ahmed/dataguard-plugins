@@ -2,7 +2,7 @@
   <main>
     <div class="main-wrapper d-flex align-items-start">
       <TabNavComponent :tabsData="tabsData" />
-      <TabContentComponent />
+      <TabContentComponent :key="dataKey" />
     </div>
   </main>
 </template>
@@ -12,6 +12,9 @@ import TabNavComponent from '../components/TabNavComponent.vue'
 import { mapActions, mapGetters } from 'vuex'
 export default {
   components: { TabContentComponent, TabNavComponent },
+  data() {
+    return { dataKey: 1 }
+  },
   methods: {
     ...mapActions({
       getTabsData: 'getTabsData',
@@ -32,6 +35,11 @@ export default {
     this.getPluginsList()
     if (this.$route.name !== this.activeTab.toLowerCase()) {
       this.$store.commit('setActiveTab', this.capitalizeFirstLetter(this.$route.name))
+    }
+  },
+  watch: {
+    tabsData() {
+      this.dataKey += 1
     }
   }
 }
